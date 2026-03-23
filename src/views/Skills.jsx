@@ -1,9 +1,9 @@
 import React, { useContext } from "react";
-import { serviceData } from "../constants";
+import { skillsData } from "../constants";
 import { ThemeContext } from "../themeProvider";
 import { motion } from "framer-motion";
 
-const Services = () => {
+const Skills = () => {
   const theme = useContext(ThemeContext);
   return (
     <div
@@ -14,7 +14,7 @@ const Services = () => {
     >
       <div
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 px-4 pt-20"
-        id="services"
+        id="skills"
       >
         <h2
           className={
@@ -23,14 +23,14 @@ const Services = () => {
               : "text-5xl font-bold px-4 md:px-0 text-center text-white"
           }
         >
-          Services
+          Skills
         </h2>
         <div className="">
           <h4 className="mt-16 text-3xl font-semibold text-blue-500">
             What I Provide
           </h4>
           <div className="mt-8 flex md:flex-row justify-between flex-col md:items-stretch items-center ">
-            {serviceData.map((el) => (
+            {skillsData.map((el) => (
               <motion.div
                 initial="hidden"
                 whileInView={"visible"}
@@ -56,4 +56,4 @@ const Services = () => {
   );
 };
 
-export default Services;
+export default Skills;
