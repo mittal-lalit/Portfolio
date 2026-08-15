@@ -1,58 +1,63 @@
-import React, { useContext } from "react";
-import { skillsData } from "../constants";
-import { ThemeContext } from "../themeProvider";
-import { motion } from "framer-motion";
+import React from 'react';
+import { motion } from 'framer-motion';
+import { skillCategories } from '../data/skills';
+import { Icons } from '../components/Icons';
 
 const Skills = () => {
-  const theme = useContext(ThemeContext);
   return (
-    <div
-      className={
-        theme.state.darkMode ? "pb-20 bg-fixed bg-gray-100" : "pb-20 bg-black"
-      }
-      // style={{backgroundImage: `url('https://i.pinimg.com/originals/b0/b1/f5/b0b1f5d33de00e3c21ad29bbba25e31b.gif')`}}>
+    <section
+      id="skills"
+      className="bg-white dark:bg-surface-950 transition-colors duration-300"
     >
-      <div
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 px-4 pt-20"
-        id="skills"
-      >
-        <h2
-          className={
-            theme.state.darkMode
-              ? "text-5xl font-bold px-4 md:px-0 text-center"
-              : "text-5xl font-bold px-4 md:px-0 text-center text-white"
-          }
+      <div className="section-container">
+        {/* Section header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
         >
-          Skills
-        </h2>
-        <div className="">
-          <h4 className="mt-16 text-3xl font-semibold text-blue-500">
-            What I Provide
-          </h4>
-          <div className="mt-8 flex md:flex-row justify-between flex-col md:items-stretch items-center ">
-            {skillsData.map((el) => (
+          <h2 className="section-heading text-surface-900 dark:text-white">
+            What I <span className="gradient-text">Do</span>
+          </h2>
+          <p className="section-subheading">
+            Specializing in AI / ML systems, RAG & LLM workflows, full-stack web applications, and backend engineering.
+          </p>
+        </motion.div>
+
+        {/* Skills grid */}
+        <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+          {skillCategories.map((skill, index) => {
+            const IconComponent = Icons[skill.icon] || Icons.web;
+            return (
               <motion.div
-                initial="hidden"
-                whileInView={"visible"}
-                variants={{
-                  visible: { opacity: 1, scale: 1 },
-                  hidden: { opacity: 0, scale: 0 },
-                }}
-                className={
-                  theme.state.darkMode
-                    ? "md:w-96 p-4 bg-white rounded-lg flex items-center flex-col mt-8"
-                    : "md:w-96 p-4 bg-gray-100 rounded-lg flex items-center flex-col mt-8"
-                }
+                key={skill.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.15 }}
+                className="glass-card p-6 md:p-8 text-center group hover:shadow-card-hover transition-all duration-300"
               >
-                <img src={el.img} alt="" />
-                <h4 className="text-xl font-bold mt-4">{el.name}</h4>
-                <p className="text-lg mt-2 text-justify">{el.desc}</p>
+                {/* Icon */}
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <IconComponent className="w-8 h-8" />
+                </div>
+
+                {/* Title */}
+                <h3 className="text-xl font-semibold text-surface-900 dark:text-white mb-3">
+                  {skill.name}
+                </h3>
+
+                {/* Description */}
+                <p className="text-surface-600 dark:text-surface-400 leading-relaxed text-sm">
+                  {skill.description}
+                </p>
               </motion.div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

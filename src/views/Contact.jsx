@@ -1,155 +1,332 @@
-import React, { useContext } from "react";
-import { contactLinks } from "../constants";
-import { ThemeContext } from "../themeProvider";
+import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
+import emailjs from '@emailjs/browser';
+import { profile } from '../data/profile';
+import { getSocialIcon, Icons } from '../components/Icons';
+
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
 const Contact = () => {
-  const theme = useContext(ThemeContext);
-  const darkMode = theme.state.darkMode;
+  const formRef = useRef(null);
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [errors, setErrors] = useState({});
+  const [status, setStatus] = useState('idle'); // idle | loading | success | error
+
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = 'Name is required.';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address.';
+    }
+    if (!formData.message.trim()) {
+      newErrors.message = 'Message is required.';
+    } else if (formData.message.trim().length < 10) {
+      newErrors.message = 'Message must be at least 10 characters.';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear error on change
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    // Check if EmailJS is configured
+    if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
+      // Fallback: open mailto
+      const subject = encodeURIComponent(`Portfolio Contact from ${formData.name}`);
+      const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`);
+      window.open(`mailto:${profile.email}?subject=${subject}&body=${body}`);
+      setStatus('success');
+      setFormData({ name: '', email: '', message: '' });
+      return;
+    }
+
+    setStatus('loading');
+
+    try {
+      await emailjs.sendForm(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        formRef.current,
+        EMAILJS_PUBLIC_KEY
+      );
+      setStatus('success');
+      setFormData({ name: '', email: '', message: '' });
+      setTimeout(() => setStatus('idle'), 5000);
+    } catch (err) {
+      console.error('EmailJS error:', err);
+      setStatus('error');
+      setTimeout(() => setStatus('idle'), 5000);
+    }
+  };
+
   return (
-    <div
+    <section
       id="contact"
-      className={
-        darkMode
-          ? "bg-gray-100 pt-24 md:h-screen"
-          : "bg-black pt-24 text-white md:h-screen"
-      }
+      className="bg-white dark:bg-surface-950 transition-colors duration-300"
     >
-      <div className="max-w-7xl mx-auto x-4 sm:px-6 lg:px-8 px-4 ">
-        <h2 className="text-5xl font-bold px-4 md:px-0 text-center z-0">
-          Contact
-        </h2>
-        <div>
-          <h4 className="mt-12 text-3xl font-semibold text-blue-500">
-            Connect with me
-          </h4>
-          <p className="text-gray-500 text-xl">
-            If you want to know more about me or my work, or if you would just
-            <br />
-            like to say hello, send me a message. I'd love to hear from you.
+      <div className="section-container">
+        {/* Section header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="section-heading text-surface-900 dark:text-white">
+            Get in <span className="gradient-text">Touch</span>
+          </h2>
+          <p className="section-subheading">
+            Have an opportunity, collaboration idea, or question? I&apos;d love to connect.
           </p>
-        </div>
-        <div className="flex justify-between items-center md:items-stretch  flex-col md:flex-row pb-24">
-          <div className="w-full md:pr-8">
-            <form>
-              <div class="my-6">
+        </motion.div>
+
+        <div className="grid md:grid-cols-5 gap-8 md:gap-12 max-w-5xl mx-auto">
+          {/* Contact form */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="md:col-span-3"
+          >
+            <form ref={formRef} onSubmit={handleSubmit} noValidate className="space-y-5">
+              {/* Name */}
+              <div>
                 <label
-                  for="name"
-                  class={
-                    darkMode
-                      ? "block mb-2 text-lg font-medium text-gray-900"
-                      : "block mb-2 text-lg font-medium text-white"
-                  }
+                  htmlFor="contact-name"
+                  className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5"
                 >
                   Name
                 </label>
                 <input
-                  type="email"
-                  id="name"
-                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder="Enter your name"
-                  required
+                  type="text"
+                  id="contact-name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Your name"
+                  className="form-input"
+                  aria-describedby={errors.name ? 'name-error' : undefined}
+                  aria-invalid={!!errors.name}
                 />
+                {errors.name && (
+                  <p id="name-error" className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
+                    <Icons.alertCircle className="w-4 h-4 shrink-0" />
+                    {errors.name}
+                  </p>
+                )}
               </div>
-              <div className="mb-4">
+
+              {/* Email */}
+              <div>
                 <label
-                  for="email"
-                  class={
-                    darkMode
-                      ? "block mb-2 text-lg font-medium text-gray-900"
-                      : "block mb-2 text-lg font-medium text-white"
-                  }
+                  htmlFor="contact-email"
+                  className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5"
                 >
                   Email
                 </label>
                 <input
                   type="email"
-                  id="email"
-                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder="Enter your email"
-                  required
+                  id="contact-email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="your@email.com"
+                  className="form-input"
+                  aria-describedby={errors.email ? 'email-error' : undefined}
+                  aria-invalid={!!errors.email}
                 />
+                {errors.email && (
+                  <p id="email-error" className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
+                    <Icons.alertCircle className="w-4 h-4 shrink-0" />
+                    {errors.email}
+                  </p>
+                )}
               </div>
-              <div className="mb-4">
+
+              {/* Message */}
+              <div>
                 <label
-                  for="message"
-                  class={
-                    darkMode
-                      ? "block mb-2 text-lg font-medium text-gray-900"
-                      : "block mb-2 text-lg font-medium text-white"
-                  }
+                  htmlFor="contact-message"
+                  className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5"
                 >
                   Message
                 </label>
                 <textarea
-                  id="message"
-                  class="bg-gray-50 border border-gray-300 text-gray-900 h-28 w-full text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder="Enter your message"
-                  required
+                  id="contact-message"
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  placeholder="Tell me about your opportunity or just say hi..."
+                  rows={5}
+                  className="form-input resize-none"
+                  aria-describedby={errors.message ? 'message-error' : undefined}
+                  aria-invalid={!!errors.message}
                 />
+                {errors.message && (
+                  <p id="message-error" className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
+                    <Icons.alertCircle className="w-4 h-4 shrink-0" />
+                    {errors.message}
+                  </p>
+                )}
               </div>
-              <div className="flex justify-between ">
-                <div className="underline">
-                  <a href="mailto:mittallalit169@gmail.com">
-                    Send me email directly
-                  </a>
-                </div>
-                <button className="bg-indigo-500 text-white px-4 py-2 w-40 rounded-md hover:bg-indigo-400">
-                  <a href="mailto:mittallalit169@gmail.com">Submit</a>
-                </button>
-              </div>
-            </form>
-          </div>
-          <div className="w-full flex flex-col md:items-end  mt-12 md:mt-6">
-            {/* <h1 className="text-3xl font-bold">Phone</h1>
-            <a
-              href="hello"
-              className="mb-12 mt-4 font-semibold text-blue-700 block uppercase"
-            >
-              +91 8285631499
-            </a> */}
-            <h1 className="text-3xl font-bold">Email</h1>
-            <a
-              href="hello"
-              className="mb-12 mt-4 font-semibold text-blue-700 block uppercase"
-            >
-              mittallalit169@gmail.com
-            </a>
-            <h1 className="text-3xl  font-bold">Address</h1>
-            <a
-              href="hello"
-              className="mt-4  mb-12 md:text-right font-semibold text-blue-700 block uppercase"
-            >
-              Aazad Chowk Colony Bonli Sawai Madhopur , Rajasthan
-              <br />
-              India
-            </a>
-            <h1 className="text-3xl  font-bold">Social</h1>
-            <ul className="flex">
-              {contactLinks.map((el) => (
-                <a
-                  href={el.link}
-                  className="md:ml-6 md:mr-0 mr-6 cursor-pointer mt-4 hover:scale-125 flex flex-col justify-center items-center"
+
+              {/* Submit button */}
+              <button
+                type="submit"
+                disabled={status === 'loading'}
+                className="btn-primary w-full gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {status === 'loading' ? (
+                  <>
+                    <Icons.loader className="w-5 h-5" />
+                    Sending...
+                  </>
+                ) : status === 'success' ? (
+                  <>
+                    <Icons.check className="w-5 h-5" />
+                    Message Sent!
+                  </>
+                ) : status === 'error' ? (
+                  <>
+                    <Icons.alertCircle className="w-5 h-5" />
+                    Failed — Try Again
+                  </>
+                ) : (
+                  <>
+                    Send Message
+                    <Icons.send className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+
+              {/* Success message */}
+              {status === 'success' && (
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-sm text-green-600 dark:text-green-400 text-center"
                 >
-                  <img alt="" src={el.url} />
-                  {/* <p className="text-md mt-2 hover:hidden">{el.name}</p> */}
-                </a>
-              ))}
-            </ul>
-          </div>
+                  Thanks for reaching out! I&apos;ll get back to you soon.
+                </motion.p>
+              )}
+
+              {/* Error message */}
+              {status === 'error' && (
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-sm text-red-500 text-center"
+                >
+                  Something went wrong. You can also email me directly below.
+                </motion.p>
+              )}
+            </form>
+          </motion.div>
+
+          {/* Contact info sidebar */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="md:col-span-2 space-y-6"
+          >
+            {/* Email */}
+            <div>
+              <div className="flex items-center gap-3 mb-1.5">
+                <div className="p-2 rounded-lg bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400">
+                  <Icons.mail className="w-5 h-5" />
+                </div>
+                <h3 className="font-semibold text-surface-900 dark:text-white">Email</h3>
+              </div>
+              <a
+                href={`mailto:${profile.email}`}
+                className="text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm break-all"
+              >
+                {profile.email}
+              </a>
+            </div>
+
+            {/* Phone */}
+            <div>
+              <div className="flex items-center gap-3 mb-1.5">
+                <div className="p-2 rounded-lg bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400">
+                  <Icons.phone className="w-5 h-5" />
+                </div>
+                <h3 className="font-semibold text-surface-900 dark:text-white">Phone</h3>
+              </div>
+              <a
+                href={`tel:${profile.phone}`}
+                className="text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm"
+              >
+                {profile.phone}
+              </a>
+            </div>
+
+            {/* Address */}
+            <div>
+              <div className="flex items-center gap-3 mb-1.5">
+                <div className="p-2 rounded-lg bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400">
+                  <Icons.mapPin className="w-5 h-5" />
+                </div>
+                <h3 className="font-semibold text-surface-900 dark:text-white">Location</h3>
+              </div>
+              <p className="text-surface-600 dark:text-surface-400 text-sm">
+                {profile.address}
+              </p>
+            </div>
+
+            {/* Social */}
+            <div>
+              <h3 className="font-semibold text-surface-900 dark:text-white mb-3">Connect</h3>
+              <div className="flex flex-wrap gap-3">
+                {profile.socials.map((social) => {
+                  const IconComponent = getSocialIcon(social.icon);
+                  return (
+                    <a
+                      key={social.name}
+                      href={social.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2.5 rounded-xl text-surface-500 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 bg-surface-50 dark:bg-surface-800 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-all duration-200"
+                      aria-label={`Visit ${social.name} profile`}
+                    >
+                      <IconComponent className="w-5 h-5" />
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Direct email link */}
+            <div className="pt-4 border-t border-surface-200 dark:border-surface-800">
+              <a
+                href={`mailto:${profile.email}`}
+                className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
+              >
+                Or send me an email directly →
+              </a>
+            </div>
+          </motion.div>
         </div>
       </div>
-      <div
-        className={
-          darkMode
-            ? "w-full bg-white text-black text-lg py-3 flex justify-center md:mt-20"
-            : "w-full bg-gray-900 text-white text-lg py-3 flex justify-center md:mt-20"
-        }
-      >
-        Made with
-        <div className="text-red-500 px-2 text-2xl">&#10084;</div>
-        by LALIT MITTAL
-      </div>
-    </div>
+    </section>
   );
 };
 

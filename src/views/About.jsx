@@ -1,87 +1,122 @@
-import React, { useContext } from "react";
-import { techStack } from "../constants";
-import { ThemeContext } from "../themeProvider";
-import { motion } from "framer-motion";
+import React from 'react';
+import { motion } from 'framer-motion';
+import { profile } from '../data/profile';
+import { techStack, softSkills } from '../data/skills';
+import { Icons } from '../components/Icons';
 
 const About = () => {
-  const theme = useContext(ThemeContext);
-  const darkMode = theme.state.darkMode;
+  const categories = [...new Set(techStack.map((t) => t.category))];
+
   return (
-    <div id="about" className={darkMode === true ? "bg-white" : "bg-gray-900"}>
-      <div className="max-w-7xl mx-auto x-4 sm:px-6 lg:px-8 px-4 md:mt-0 pt-24 pb-12">
-        <h2
-          className={
-            darkMode
-              ? "text-5xl font-bold px-4 md:px-0 text-center"
-              : "text-5xl font-bold px-4 md:px-0 text-center text-white"
-          }
+    <section
+      id="about"
+      className="bg-surface-50 dark:bg-surface-900 transition-colors duration-300"
+    >
+      <div className="section-container">
+        {/* Section header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
         >
-          About Me
-        </h2>
-        <div>
-          <motion.div>
-            <h4 className="mt-12 text-3xl font-semibold text-blue-500">
-              A bit about me
-            </h4>
-            <p
-              className={
-                darkMode
-                  ? "mt-4 text-xl text-justify text-gray-500"
-                  : "mt-4 text-xl text-justify text-white"
-              }
-            >
-              I'm a self-taught web developer and Mobile App Developer with
-              experience in designing new features from ideation to production,
-              implementation of wireframes and design flows into high
-              performance software applications. I take into consideration the
-              user experience while writing reusable and efficient code. I
-              passionately combine good design, technology, and innovation in
-              all my projects, which I like to accompany from the first idea to
-              release.Currently, I'm focused on the backend development.
+          <h2 className="section-heading text-surface-900 dark:text-white">
+            About <span className="gradient-text">Me</span>
+          </h2>
+          <p className="section-subheading">
+            Get to know my technical background, expertise, and passion for AI & software engineering.
+          </p>
+        </motion.div>
+
+        {/* Bio */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="max-w-3xl mx-auto mb-16"
+        >
+          <div className="glass-card p-6 md:p-8">
+            <h3 className="text-xl font-semibold text-primary-600 dark:text-primary-400 mb-4">
+              Professional Summary
+            </h3>
+            <p className="text-surface-700 dark:text-surface-300 text-lg leading-relaxed mb-4">
+              {profile.bio}
             </p>
-          </motion.div>
-          <motion.div
-          >
-            <h4 className="mt-12 text-3xl font-semibold text-blue-500">
-              Technologies and Tools
-            </h4>
-            <p
-              className={
-                darkMode
-                  ? "mt-4 text-xl text-justify text-gray-500"
-                  : "mt-4 text-xl text-justify text-white"
-              }
-            >
-              Using a combination of cutting-edge technologies and reliable
-              open-source software I build user-focused, performant apps and
-              websites for smartphones, tablets, and desktops.
+            <p className="text-surface-600 dark:text-surface-400 leading-relaxed mb-6">
+              {profile.bioExtended}
             </p>
-          </motion.div>
-          <motion.div className="flex flex-wrap mt-8 flex flex-wrap justify-between ">
-            {techStack.map((el, index) => (
-              <motion.div
-                initial="hidden"
-                whileInView={"visible"}
-                variants={{
-                  visible: {
-                    y: 0,
-                    opacity: 1,
-                    transition: {
-                      type: "spring",
-                    },
-                  },
-                  hidden: { opacity: 1, y: 80 },
-                }}
-                className="py-2 px-4 bg-gray-50 md:m-4 mx-2 mt-6 rounded-lg flex items-center hover:scale-125 cursor-pointer md:w-48 w-40"
-              >
-                <img alt="" src={el.link} className="w-12" />
-                <h4 className="text-md ml-4">{el.name}</h4>
-              </motion.div>
+
+            {/* Soft skills chips */}
+            {softSkills && softSkills.length > 0 && (
+              <div className="pt-4 border-t border-surface-200 dark:border-surface-800">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400 mb-3">
+                  Soft Skills
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {softSkills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="px-3 py-1 text-xs font-medium rounded-full bg-primary-50 dark:bg-primary-500/10 text-primary-700 dark:text-primary-300 border border-primary-500/20"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Technologies */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <h3 className="text-2xl font-semibold text-primary-600 dark:text-primary-400 mb-8 text-center">
+            Technical Stack & Frameworks
+          </h3>
+
+          <div className="space-y-8">
+            {categories.map((category) => (
+              <div key={category}>
+                <h4 className="text-sm font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400 mb-4">
+                  {category}
+                </h4>
+                <div className="flex flex-wrap gap-3">
+                  {techStack
+                    .filter((t) => t.category === category)
+                    .map((tech, index) => (
+                      <motion.div
+                        key={tech.name}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.3, delay: index * 0.03 }}
+                        className="tech-badge"
+                        title={tech.name}
+                      >
+                        <img
+                          src={tech.icon}
+                          alt={`${tech.name} logo`}
+                          className="w-5 h-5 object-contain"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                        <span>{tech.name}</span>
+                      </motion.div>
+                    ))}
+                </div>
+              </div>
             ))}
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </section>
   );
 };
 

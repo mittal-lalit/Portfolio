@@ -1,167 +1,209 @@
-import React, { useContext, useState } from "react";
-import { Link } from "react-scroll";
-import { ThemeContext } from "../themeProvider";
-import { motion, AnimatePresence } from "framer-motion";
-import Hamburger from "hamburger-react";
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '../themeProvider';
+import { Icons } from './Icons';
+import clsx from 'clsx';
+
+const navLinks = [
+  { name: 'Home', id: 'home' },
+  { name: 'About', id: 'about' },
+  { name: 'Experience', id: 'experience' },
+  { name: 'Education', id: 'education' },
+  { name: 'Skills', id: 'skills' },
+  { name: 'Projects', id: 'projects' },
+  { name: 'Achievements', id: 'achievements' },
+  { name: 'Contact', id: 'contact' },
+];
 
 const Navbar = () => {
-  const theme = useContext(ThemeContext);
-  const [toggle, setToggle] = useState(false);
-  const darkMode = theme.state.darkMode;
-  const links = [
-    {
-      name: "Home",
-      route: "/",
-    },
-    {
-      name: "About",
-      route: "about",
-    },
-    {
-      name: "Skills",
-      route: "skills",
-    },
-    {
-      name: "Projects",
-      route: "projects",
-    },
-    {
-      name: "Contact",
-      route: "contact",
-    },
-  ];
+  const { isDark, toggleTheme } = useTheme();
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
+  const [scrolled, setScrolled] = useState(false);
 
-  function toggleTheme() {
-    if (darkMode === true) {
-      theme.dispatch({ type: "LIGHTMODE" });
-    } else {
-      theme.dispatch({ type: "DARKMODE" });
+  // Track scroll for navbar background
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Intersection Observer for scrollspy
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: '-40% 0px -55% 0px' }
+    );
+
+    navLinks.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const scrollToSection = useCallback((id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+      setIsOpen(false);
     }
-  }
+  }, []);
+
+  // Close mobile menu on Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
 
   return (
     <>
       <nav
-        className={
-          darkMode
-            ? "bg-white border-gray-200 z-50 shadow-lg md:px-8 px-1 fixed w-full top-0"
-            : "bg-gray-700 border-gray-200 z-50 shadow-lg md:px-8 px-1 fixed w-full top-0"
-        }
+        className={clsx(
+          'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+          scrolled
+            ? 'bg-white/80 dark:bg-surface-900/80 backdrop-blur-lg shadow-nav'
+            : 'bg-transparent'
+        )}
+        role="navigation"
+        aria-label="Main navigation"
       >
-        <div className="flex justify-between items-center py-2 md:py-4 md:px-2 pl-2 mx-auto">
-          <div className="flex items-center cursor-pointer">
-            <a
-              href="/"
-              className={
-                darkMode
-                  ? "text-xl font-medium text-decoration-none whitespace-nowrap text-black"
-                  : "text-xl font-medium text-decoration-none whitespace-nowrap text-white"
-              }
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 md:h-20">
+            {/* Logo */}
+            <button
+              onClick={() => scrollToSection('home')}
+              className="text-lg md:text-xl font-bold font-mono text-surface-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              aria-label="Go to homepage"
             >
-              {`<ꪶꪖꪶ꠸ꪻ ꪑ꠸ꪻꪻꪖꪶ/>`}
-            </a>
-          </div>
-          <div class="hidden justify-between items-center w-full md:flex md:w-auto ">
-            <ul
-              class={
-                "flex flex-col mt-4 md:flex-row md:space-x-8 md:mt-0 md:text-md md:font-medium"
-              }
-            >
-              {links.map((el) => (
-                <li className="cursor-pointer">
-                  <Link
-                    to={el.route}
-                    activeClass={"text-white bg-blue-500"}
-                    spy={true}
-                    smooth={true}
-                    className={
-                      darkMode
-                        ? "block py-2 px-3 text-black hover:bg-blue-500 hover:text-white rounded-md"
-                        : "block py-2 px-3 text-white hover:bg-blue-500 hover:text-black rounded-md"
-                    }
-                  >
-                    {el.name}
-                  </Link>
-                </li>
+              {'<LM />'}
+            </button>
+
+            {/* Desktop nav links */}
+            <div className="hidden lg:flex items-center gap-1">
+              {navLinks.map(({ name, id }) => (
+                <button
+                  key={id}
+                  onClick={() => scrollToSection(id)}
+                  className={clsx(
+                    'nav-link text-xs xl:text-sm px-2.5 py-1.5',
+                    activeSection === id && 'nav-link-active'
+                  )}
+                  aria-current={activeSection === id ? 'true' : undefined}
+                >
+                  {name}
+                </button>
               ))}
-            </ul>
-            <div onClick={() => toggleTheme()}>
-              {darkMode ? (
-                <img
-                  src="https://img.icons8.com/external-flaticons-flat-flat-icons/64/000000/external-sun-lighting-flaticons-flat-flat-icons.png"
-                  className="w-6 ml-6 cursor-pointer hover:scale-1.50 block"
-                  alt=""
-                />
-              ) : (
-                <img
-                  src="https://img.icons8.com/external-prettycons-lineal-color-prettycons/49/000000/external-moon-astrology-and-symbology-prettycons-lineal-color-prettycons.png"
-                  className="w-6 ml-6 cursor-pointer hover:scale-1.50 block"
-                  alt=""
-                />
-              )}
-            </div>
-          </div>
 
-          <div className="flex md:hidden items-center">
-            <div onClick={() => toggleTheme()}>
-              {darkMode ? (
-                <img
-                  src="https://img.icons8.com/external-flaticons-flat-flat-icons/64/000000/external-sun-lighting-flaticons-flat-flat-icons.png"
-                  className="w-6 mr-4 cursor-pointer hover:scale-1.50 block"
-                  alt=""
-                />
-              ) : (
-                <img
-                  src="https://img.icons8.com/external-prettycons-lineal-color-prettycons/49/000000/external-moon-astrology-and-symbology-prettycons-lineal-color-prettycons.png"
-                  alt=""
-                  className="w-6 mr-4 cursor-pointer hover:scale-1.50 block"
-                />
-              )}
+              {/* Theme toggle */}
+              <button
+                onClick={toggleTheme}
+                className="ml-2 p-2 rounded-xl text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDark ? (
+                  <Icons.sun className="w-5 h-5" />
+                ) : (
+                  <Icons.moon className="w-5 h-5" />
+                )}
+              </button>
             </div>
 
-            <Hamburger
-              toggled={toggle}
-              size={22}
-              duration={0.8}
-              distance={"lg"}
-              toggle={setToggle}
-              color={darkMode ? "#000000" : "#ffffff"}
-            />
+            {/* Mobile / Tablet controls */}
+            <div className="flex lg:hidden items-center gap-2">
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-xl text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDark ? (
+                  <Icons.sun className="w-5 h-5" />
+                ) : (
+                  <Icons.moon className="w-5 h-5" />
+                )}
+              </button>
+
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="p-2 rounded-xl text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                aria-label={isOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={isOpen}
+              >
+                {isOpen ? (
+                  <Icons.x className="w-5 h-5" />
+                ) : (
+                  <Icons.menu className="w-5 h-5" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
-        {/* Mobile view nav bar */}
       </nav>
+
+      {/* Mobile menu overlay */}
       <AnimatePresence>
-        {toggle && (
-          <motion.div
-            initial={{ x: 100 }}
-            animate={{ x: 0, transition: { type: "spring" } }}
-            exit={{ x: 200, transition: { type: "spring" } }}
-            className={
-              darkMode
-                ? "bg-white py-2 px-2 md:p-0 z-50 fixed top-16 mt-2 rounded-lg shadow-lg right-2 block w-40"
-                : "bg-black py-2 px-2 md:p-0 z-50 fixed top-16 mt-2 rounded-lg shadow-lg right-2 block w-40"
-            }
-          >
-            <ul class="md:hidden md:flex-row md:space-y-8 md:mt-0 md:text-md md:font-medium">
-              {links.map((el) => (
-                <Link
-                  to={el.route}
-                  activeClass={"text-white bg-blue-500"}
-                  className={
-                    darkMode
-                      ? "hover:bg-blue-500 text-black block px-3 py-2 rounded-md text-base font-medium mt-1 hover:text-white"
-                      : "hover:bg-blue-500 text-white block px-3 py-2 rounded-md text-base font-medium mt-1 hover:text-white"
-                  }
-                  spy={true}
-                  smooth={true}
-                  onClick={() => setToggle(false)}
-                >
-                  <li>{el.name}</li>
-                </Link>
-              ))}
-            </ul>
-          </motion.div>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/20 dark:bg-black/40 backdrop-blur-sm lg:hidden"
+              onClick={() => setIsOpen(false)}
+              aria-hidden="true"
+            />
+
+            {/* Menu panel */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 z-50 h-full w-72 bg-white dark:bg-surface-900 shadow-2xl lg:hidden overflow-y-auto"
+            >
+              <div className="flex flex-col h-full pt-20 pb-8 px-6">
+                <nav className="flex flex-col gap-1.5">
+                  {navLinks.map(({ name, id }) => (
+                    <button
+                      key={id}
+                      onClick={() => scrollToSection(id)}
+                      className={clsx(
+                        'text-left px-4 py-2.5 rounded-xl text-base font-medium transition-colors',
+                        activeSection === id
+                          ? 'bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400'
+                          : 'text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800'
+                      )}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>
